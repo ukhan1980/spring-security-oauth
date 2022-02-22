@@ -1,5 +1,6 @@
 package com.baeldung.resource.spring;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,6 +8,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {// @formatter:off
@@ -19,6 +23,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                   .hasAuthority("SCOPE_write")
                 .anyRequest()
                   .authenticated()
+            .and()
+              .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
             .and()
               .oauth2ResourceServer()
                 .jwt();

@@ -24,12 +24,22 @@ public class AuthorizationCodeLiveTest {
 
     @Test
     public void givenUser_whenUseFooClient_thenOkForFooResourceOnly() {
-        final String accessToken = obtainAccessTokenWithAuthorizationCode("john@test.com", "123");
+        final String accessToken = obtainAccessTokenWithAuthorizationCode("john@baeldung.com", "123");
 
         final Response fooResponse = RestAssured.given().header("Authorization", "Bearer " + accessToken).get(RESOURCE_SERVER + "/api/foos/1");
         assertEquals(200, fooResponse.getStatusCode());
         assertNotNull(fooResponse.jsonPath().get("name"));
 
+    }
+
+    @Test
+    public void givenInvalidUser_whenUseFooClient_thenForbiddenForFooResource() {
+	    final String accessToken = obtainAccessTokenWithAuthorizationCode("john@test.com", "123");
+
+	    final Response fooResponse = RestAssured.given().header("Authorization", "Bearer " + accessToken).get(RESOURCE_SERVER + "/api/foos/1");
+
+	    assertEquals(HttpStatus.FORBIDDEN.value(), fooResponse.getStatusCode());
+	    assertEquals("preferred_username claim does not belong to valid domain", fooResponse.jsonPath().get("message"));
     }
 
     private String obtainAccessTokenWithAuthorizationCode(String username, String password) {
