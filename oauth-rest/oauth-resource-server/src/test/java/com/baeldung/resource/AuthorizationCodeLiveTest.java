@@ -2,6 +2,8 @@ package com.baeldung.resource;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.OK;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +23,7 @@ public class AuthorizationCodeLiveTest {
     private final static String REDIRECT_URL = "http://localhost:8082/new-client/login/oauth2/code/custom";
 	private final static String CLIENT_ID = "newClient";
 	private final static String CLIENT_SECRET = "newClientSecret";
+	private final static String SUPERUSER_RESOURCE = RESOURCE_SERVER + "/user/bar";
 
     @Test
     public void givenUser_whenUseFooClient_thenOkForFooResourceOnly() {
@@ -31,6 +34,24 @@ public class AuthorizationCodeLiveTest {
         assertNotNull(fooResponse.jsonPath().get("name"));
 
     }
+
+	@Test
+	public void givenUserWithValidDomain_whenUseClient_thenOkForSuperuserResource() {
+		final String accessToken = obtainAccessTokenWithAuthorizationCode("john@baeldung.com", "123");
+
+		final Response fooResponse = RestAssured.given().header("Authorization", "Bearer " + accessToken).get(SUPERUSER_RESOURCE);
+
+		assertEquals(OK.value(), fooResponse.getStatusCode());
+	}
+
+	@Test
+	public void givenUserWithInvalidDomain_whenUseClient_thenForbiddenForSuperuserResource() {
+		final String accessToken = obtainAccessTokenWithAuthorizationCode("john@test.com", "123");
+
+		final Response response = RestAssured.given().header("Authorization", "Bearer " + accessToken).get(SUPERUSER_RESOURCE);
+
+		assertEquals(FORBIDDEN.value(), response.getStatusCode());
+	}
 
     private String obtainAccessTokenWithAuthorizationCode(String username, String password) {
     	
